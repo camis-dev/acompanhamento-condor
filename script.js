@@ -1,4 +1,4 @@
-// Helpers compartilhados entre index/condor-geral/categorias/casa-de-mae.
+// Helpers compartilhados entre index (Visão Geral)/categorias/casa-de-mae.
 
 function getData() {
   // window.CONDOR_DATA vem de data.js (<script src>, funciona tanto aberto
