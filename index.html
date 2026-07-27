@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campanha Condor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="brandrow">
+        <div class="logo-slot">Triunfante</div>
+        <span class="brand-x">×</span>
+        <div class="logo-slot">Condor</div>
+      </div>
+      <div class="hero-meta">Atualizado em <span id="atualizadoEm">—</span></div>
+    </div>
+    <h1>Campanha Condor</h1>
+    <div class="sub">Acompanhamento de vendas, positivação e metas — fornecedor 35116</div>
+    <div class="hero-nav">
+      <a href="index.html" class="active">Visão Geral</a>
+      <a href="condor-geral.html">Condor Geral</a>
+      <a href="categorias.html">Categorias Performance</a>
+      <a href="casa-de-mae.html">Casa de Mãe · Rede Italo</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="statrow" id="statrow"></div>
+
+  <div class="grid3" id="navcards"></div>
+
+  <div class="section-title">Placar por supervisor <span class="tag">Condor Geral</span></div>
+  <div id="supPreview"></div>
+
+  <div class="footer-note">Campanha Condor — dados líquidos de devolução, positivação sem duplicidade entre Faturado/A Faturar.</div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+<script>
+(function () {
+  var data = getData();
+  document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
+
+  var g = data.geral.totalGeral;
+  var cats = data.categorias.totalGeral;
+  var cdm = data.casaDeMae.totalGeral;
+
+  var stats = [
+    { label: "Faturamento Condor (líquido)", value: fmtBRL(g.faturamento), sub: g.metaFaturamento ? ("Meta " + fmtBRL(g.metaFaturamento) + " · " + fmtPct(g.pctMetaFaturamento)) : "" },
+    { label: "Positivação Condor", value: fmtInt(g.positivacao) + " clientes", sub: g.metaPositivacao ? ("Meta " + fmtInt(g.metaPositivacao) + " · " + fmtPct(g.pctMetaPositivacao)) : "" },
+    { label: "Caixas vendidas", value: fmtNum(g.caixasVenda, 0), sub: fmtInt(g.unidadesVenda) + " unidades" },
+    { label: "Casa de Mãe · Rede Italo", value: cdm.clientesAtivos + " / " + cdm.clientesRede + " CNPJs", sub: fmtBRL(cdm.faturamento) + " em vendas" }
+  ];
+  document.getElementById("statrow").innerHTML = stats.map(function (s) {
+    return '<div class="stat"><div class="label">' + s.label + '</div><div class="value num">' + s.value + '</div><div class="sub">' + s.sub + '</div></div>';
+  }).join("");
+
+  var cards = [
+    { href: "condor-geral.html", title: "Condor Geral", desc: "Faturado, a faturar, caixas vendidas e positivação por supervisor e vendedor, com metas e percentuais.", big: fmtBRL(g.faturamento) },
+    { href: "categorias.html", title: "Categorias Performance", desc: "Higiene, Limpeza e Beleza — venda faturada e positivação por categoria e por supervisor.", big: fmtBRL(cats.faturamento) },
+    { href: "casa-de-mae.html", title: "Casa de Mãe · Rede Italo", desc: "Linha Casa de Mãe vendida para os CNPJs da Rede Italo, com exportação no padrão da planilha.", big: cdm.clientesAtivos + "/" + cdm.clientesRede + " lojas" }
+  ];
+  document.getElementById("navcards").innerHTML = cards.map(function (c) {
+    return '<a class="card" href="' + c.href + '" style="text-decoration:none;display:block">' +
+      '<div class="section-title" style="margin:0 0 6px">' + c.title + '</div>' +
+      '<div style="font-size:22px;font-weight:800;margin-bottom:6px" class="num">' + c.big + '</div>' +
+      '<div style="font-size:12.5px;color:var(--ink-soft)">' + c.desc + '</div>' +
+    '</a>';
+  }).join("");
+
+  var order = data.supervisores.filter(function (s) { return s.id !== 0; });
+  document.getElementById("supPreview").innerHTML = '<div class="grid3">' + order.map(function (s) {
+    var sup = data.geral.porSupervisor.find(function (x) { return x.supervisorId === s.id; });
+    return '<div class="card sup-card" style="--sup-accent:' + supAccent(s.id) + '">' +
+      '<div class="sup-head"><div class="sup-name"><span class="dot"></span>' + s.nome + '</div></div>' +
+      pctBarRow("Faturamento", sup.pctMetaFaturamento) +
+      pctBarRow("Positivação", sup.pctMetaPositivacao) +
+    '</div>';
+  }).join("") + '</div>';
+})();
+</script>
+</body>
+</html>

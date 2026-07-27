@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casa de Mãe · Rede Italo — Campanha Condor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <a class="backlink" href="index.html">← Visão Geral</a>
+      <div class="hero-meta">Atualizado em <span id="atualizadoEm">—</span></div>
+    </div>
+    <h1>Casa de Mãe · Rede Italo</h1>
+    <div class="sub">Linha Casa de Mãe (CDM) vendida para os CNPJs da Rede Italo</div>
+    <div class="hero-nav">
+      <a href="index.html">Visão Geral</a>
+      <a href="condor-geral.html">Condor Geral</a>
+      <a href="categorias.html">Categorias Performance</a>
+      <a href="casa-de-mae.html" class="active">Casa de Mãe · Rede Italo</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="statrow" id="statrow"></div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="exportCasaDeMaeTemplate()">⬇ Exportar Excel (padrão da planilha)</button>
+    <button class="btn secondary" onclick="printPage()">🖨 Exportar PDF / Imprimir</button>
+  </div>
+
+  <div id="emptyNote"></div>
+
+  <div class="section-title">Lojas da Rede Italo</div>
+  <div class="datatable-wrap card" style="padding:0">
+    <table class="datatable" id="cnpjTable"></table>
+  </div>
+
+  <div class="section-title">Por produto Casa de Mãe</div>
+  <div class="datatable-wrap card" style="padding:0">
+    <table class="datatable" id="produtoTable"></table>
+  </div>
+
+  <div class="footer-note">Exportação gera um Excel no layout exato do arquivo-modelo (CNPJ · Rede · Segmento · Cód TCV · Descrição · Unidades · Preço Und · Venda · Data · NFE), pronto pra colar/combinar com relatórios anteriores.</div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+<script>
+(function () {
+  var data = getData();
+  document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
+  var cdm = data.casaDeMae;
+  var t = cdm.totalGeral;
+
+  document.getElementById("statrow").innerHTML = [
+    { label: "Lojas ativas", value: t.clientesAtivos + " / " + t.clientesRede },
+    { label: "Faturamento", value: fmtBRL(t.faturamento) },
+    { label: "Unidades vendidas", value: fmtInt(t.unidadesVenda) },
+    { label: "Positivação", value: fmtInt(t.positivacao) + " clientes" }
+  ].map(function (s) {
+    return '<div class="stat"><div class="label">' + s.label + '</div><div class="value num">' + s.value + '</div></div>';
+  }).join("");
+
+  if (t.faturamento === 0 && t.aFaturar === 0) {
+    document.getElementById("emptyNote").innerHTML = '<div class="card" style="border-left:4px solid var(--warning)"><b>Nenhuma venda da linha Casa de Mãe para a Rede Italo no período atual da base.</b><div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px">Os ' + t.clientesRede + ' CNPJs cadastrados e os ' + cdm.produtos.length + ' SKUs da linha estão mapeados abaixo — assim que houver venda no 8022, este painel (e a exportação) atualizam automaticamente ao rodar o gerar-dados.ps1 de novo.</div></div>';
+  }
+
+  var cnpjHeaders = ["CNPJ", "Razão Social", "Segmento", "Status", "Faturado", "A Faturar", "Total", "Positivação"];
+  var cnpjRows = cdm.cnpjsRede.map(function (c) {
+    return "<tr><td>" + c.cnpj + "</td><td>" + (c.razaoSocial || "—") + "</td><td>" + (c.segmento || "—") + "</td>" +
+      "<td>" + (c.comprou ? '<span class="badge good">Comprou</span>' : '<span class="badge neutral">Sem compra</span>') + "</td>" +
+      "<td class=\"num\">" + fmtBRLCentavos(c.faturado) + "</td><td class=\"num\">" + fmtBRLCentavos(c.aFaturar) + "</td>" +
+      "<td class=\"num\">" + fmtBRLCentavos(c.faturamento) + "</td><td class=\"num\">" + c.positivacao + "</td></tr>";
+  }).join("");
+  document.getElementById("cnpjTable").innerHTML = "<tr>" + cnpjHeaders.map(function(h){return "<th>"+h+"</th>";}).join("") + "</tr>" + cnpjRows;
+
+  var prodHeaders = ["Código", "Descrição", "Unidades", "Faturado", "A Faturar", "Total"];
+  var prodRows = cdm.produtos.map(function (p) {
+    return "<tr><td>" + p.codigo + "</td><td>" + (p.descricao || "—") + "</td><td class=\"num\">" + fmtInt(p.unidadesVenda) + "</td>" +
+      "<td class=\"num\">" + fmtBRLCentavos(p.faturado) + "</td><td class=\"num\">" + fmtBRLCentavos(p.aFaturar) + "</td><td class=\"num\">" + fmtBRLCentavos(p.faturamento) + "</td></tr>";
+  }).join("");
+  document.getElementById("produtoTable").innerHTML = "<tr>" + prodHeaders.map(function(h){return "<th>"+h+"</th>";}).join("") + "</tr>" + prodRows;
+})();
+</script>
+</body>
+</html>

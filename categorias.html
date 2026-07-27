@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categorias Performance — Campanha Condor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <a class="backlink" href="index.html">← Visão Geral</a>
+      <div class="hero-meta">Atualizado em <span id="atualizadoEm">—</span></div>
+    </div>
+    <h1>Categorias Performance</h1>
+    <div class="sub">Higiene · Limpeza · Beleza — venda faturada e positivação, sem meta oficial (apenas acompanhamento)</div>
+    <div class="hero-nav">
+      <a href="index.html">Visão Geral</a>
+      <a href="condor-geral.html">Condor Geral</a>
+      <a href="categorias.html" class="active">Categorias Performance</a>
+      <a href="casa-de-mae.html">Casa de Mãe · Rede Italo</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="section-title">Resumo das 3 categorias <span class="tag">Total</span></div>
+  <div class="card" id="resumoTotalCard"></div>
+
+  <div class="section-title">Total por supervisor <span class="tag">Higiene + Limpeza + Beleza</span></div>
+  <div id="resumoPorSupervisor"></div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="tabpanels"></div>
+
+  <div class="footer-note">Positivação aqui conta clientes distintos que compraram o item no período (sem excluir por devolução) — métrica diferente da positivação do Condor Geral, que exclui clientes com devolução no período.</div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+<script>
+(function () {
+  var data = getData();
+  document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
+  var cat = data.categorias;
+
+  document.getElementById("resumoTotalCard").innerHTML = metricTableHTML(cat.totalGeral, { caixas: true, unidades: true, meta: false });
+
+  document.getElementById("resumoPorSupervisor").innerHTML = '<div class="grid3">' + cat.porSupervisor.map(function (s) {
+    return '<div class="card sup-card" style="--sup-accent:' + supAccent(s.supervisorId) + '">' +
+      '<div class="sup-head"><div class="sup-name"><span class="dot"></span>' + s.nome + '</div><span class="num" style="font-weight:800">' + fmtBRL(s.faturamento) + '</span></div>' +
+      '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">Positivação: <b>' + fmtInt(s.positivacao) + '</b> clientes · Caixas: <b>' + fmtNum(s.caixasVenda,1) + '</b></div>' +
+    '</div>';
+  }).join("") + '</div>';
+
+  document.getElementById("tabs").innerHTML = cat.lista.map(function (c, i) {
+    return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" data-tab="panel-' + c.id + '">' + c.nome + '</button>';
+  }).join("");
+
+  document.getElementById("tabpanels").innerHTML = cat.lista.map(function (c, i) {
+    var produtosHtml = c.produtos.map(function (p) { return '<span class="prodchip"><b>' + p.codigo + '</b> ' + p.descricao + '</span>'; }).join("");
+    var supHtml = c.porSupervisor.map(function (s) {
+      var vendHtml = "";
+      if (s.vendedores && s.vendedores.length) {
+        vendHtml = '<div style="margin-top:12px">' + s.vendedores.slice().sort(function(a,b){return b.faturamento-a.faturamento;}).map(function (v) {
+          return '<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-top:1px solid var(--line)">' +
+            '<span>' + v.nome + '</span><span class="num">' + fmtBRLCentavos(v.faturamento) + ' · ' + v.positivacao + ' clientes</span>' +
+          '</div>';
+        }).join("") + '</div>';
+      } else {
+        vendHtml = '<div style="font-size:12px;color:var(--ink-muted);margin-top:8px">Nenhuma venda desta categoria por vendedores deste time no período.</div>';
+      }
+      return '<div class="card sup-card clickable" style="--sup-accent:' + supAccent(s.supervisorId) + '" onclick="toggleSupCard(this)">' +
+        '<div class="sup-head"><div class="sup-name"><span class="dot"></span>' + s.nome + '</div><div style="display:flex;align-items:center;gap:14px"><span class="num" style="font-weight:800">' + fmtBRL(s.faturamento) + '</span><span class="chev">▶</span></div></div>' +
+        '<div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Positivação: ' + fmtInt(s.positivacao) + ' clientes (' + s.positivacaoFaturado + 'F + ' + s.positivacaoAFaturar + 'AF)</div>' +
+        '<div class="sup-body">' + metricTableHTML(s, { caixas: true, unidades: false, meta: false }) + vendHtml + '</div>' +
+      '</div>';
+    }).join("");
+
+    return '<div class="tabpanel' + (i === 0 ? ' active' : '') + '" id="panel-' + c.id + '">' +
+      '<div class="card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">' +
+          '<div><div style="font-size:17px;font-weight:800">' + c.nome + '</div><div style="font-size:11.5px;color:var(--ink-muted)">' + c.departamento + ' · ' + c.totalSkus + ' SKUs</div></div>' +
+          '<button class="btn ghost" onclick="var el=this.parentElement.parentElement.querySelector(\'.prodlist\'); el.style.display = el.style.display===\'none\'?\'flex\':\'none\';">Ver produtos da categoria</button>' +
+        '</div>' +
+        '<div class="prodlist" style="display:none">' + produtosHtml + '</div>' +
+        '<div style="margin-top:12px">' + metricTableHTML(c.totalGeral, { caixas: true, unidades: true, meta: false }) + '</div>' +
+      '</div>' +
+      '<div class="section-title" style="margin-top:20px">Por supervisor</div>' +
+      supHtml +
+    '</div>';
+  }).join("");
+
+  wireTabs(document);
+})();
+</script>
+</body>
+</html>
