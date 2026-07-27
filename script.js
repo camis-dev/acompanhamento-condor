@@ -49,6 +49,7 @@ function pctBarRow(label, pct) {
 }
 
 function supAccent(id) { return "var(--sup-" + id + ")"; }
+function catAccent(id) { return "var(--cat-" + id + ")"; }
 
 // Tabela detalhada Faturado / A Faturar / Total, opcionalmente com Meta+% e Caixas.
 function metricTableHTML(m, opts) {

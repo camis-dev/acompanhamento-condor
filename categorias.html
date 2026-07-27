@@ -24,16 +24,16 @@
 </div>
 
 <div class="wrap">
-  <div class="section-title">Resumo das 3 categorias <span class="tag">Total</span></div>
-  <div class="card" id="resumoTotalCard"></div>
+  <div id="resumoTotalCard"></div>
 
-  <div class="section-title">Total por supervisor <span class="tag">Higiene + Limpeza + Beleza</span></div>
-  <div id="resumoPorSupervisor"></div>
-
+  <div class="section-title">Detalhamento por categoria <span class="tag">Higiene · Limpeza · Beleza</span></div>
   <div class="tabs" id="tabs"></div>
   <div id="tabpanels"></div>
 
-  <div class="footer-note">Positivação aqui conta clientes distintos que compraram o item no período (sem excluir por devolução) — métrica diferente da positivação do Condor Geral, que exclui clientes com devolução no período.</div>
+  <div class="section-title">Supervisores — detalhado <span class="tag">Higiene + Limpeza + Beleza</span></div>
+  <div id="resumoPorSupervisor"></div>
+
+  <div class="footer-note">Positivação aqui conta clientes distintos que compraram o item no período, excluindo quem teve devolução — mesmo critério do Condor Geral.</div>
 </div>
 
 <script src="data.js"></script>
@@ -44,7 +44,24 @@
   document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
   var cat = data.categorias;
 
-  document.getElementById("resumoTotalCard").innerHTML = metricTableHTML(cat.totalGeral, { caixas: true, unidades: true, meta: false });
+  var scoreboardRows = cat.lista.map(function (c) {
+    return '<div class="scoreboard-row" style="--cat-accent:' + catAccent(c.id) + '">' +
+      '<div class="scoreboard-name"><span class="dot"></span>' + c.nome + '</div>' +
+      '<div class="scoreboard-venda">' + fmtBRLCentavos(c.totalGeral.faturamento) + '</div>' +
+      '<div class="scoreboard-posit">' + fmtInt(c.totalGeral.positivacao) + '</div>' +
+    '</div>';
+  }).join("");
+  scoreboardRows += '<div class="scoreboard-row scoreboard-total">' +
+    '<div class="scoreboard-name">Total</div>' +
+    '<div class="scoreboard-venda">' + fmtBRLCentavos(cat.totalGeral.faturamento) + '</div>' +
+    '<div class="scoreboard-posit">' + fmtInt(cat.totalGeral.positivacao) + '</div>' +
+  '</div>';
+  document.getElementById("resumoTotalCard").innerHTML =
+    '<div class="scoreboard">' +
+      '<div class="scoreboard-head"><div class="scoreboard-title">Vendas Condor</div><div class="scoreboard-sub">Categorias Performance — acompanhamento do período</div></div>' +
+      '<div class="scoreboard-cols"><span></span><span>Venda</span><span>Positivação</span></div>' +
+      scoreboardRows +
+    '</div>';
 
   document.getElementById("resumoPorSupervisor").innerHTML = '<div class="grid3">' + cat.porSupervisor.map(function (s) {
     return '<div class="card sup-card" style="--sup-accent:' + supAccent(s.supervisorId) + '">' +
