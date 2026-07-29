@@ -7,33 +7,27 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-top">
-      <a class="backlink" href="index.html">← Menu</a>
-      <div class="hero-meta">Atualizado em <span id="atualizadoEm">—</span></div>
-    </div>
-    <h1>Categorias Performance</h1>
-    <div class="sub">Higiene · Limpeza · Beleza — venda faturada e positivação, sem meta oficial (apenas acompanhamento)</div>
-    <div class="hero-nav">
-      <a href="visao-geral.html">Visão Geral</a>
-      <a href="categorias.html" class="active">Categorias Performance</a>
-      <a href="casa-de-mae.html">Casa de Mãe</a>
-    </div>
-  </div>
-</div>
+<div class="app">
+  <div id="sidebarSlot"></div>
+  <div class="main">
+    <div class="content">
+      <div id="topbarSlot"></div>
 
-<div class="wrap">
-  <div id="resumoTotalCard"></div>
+  <div id="scoreboardCard"></div>
+
+  <div class="section-title">Composição do faturamento <span class="tag">participação por categoria</span></div>
+  <div class="card" id="stackBarCard"></div>
 
   <div class="section-title">Detalhamento por categoria <span class="tag">Higiene · Limpeza · Beleza</span></div>
   <div class="tabs" id="tabs"></div>
   <div id="tabpanels"></div>
 
-  <div class="section-title">Supervisores — detalhado <span class="tag">Higiene + Limpeza + Beleza</span></div>
-  <div id="resumoPorSupervisor"></div>
+  <div class="section-title">Ranking por supervisor <span class="tag">Higiene + Limpeza + Beleza</span></div>
+  <div class="card" id="rankCard"></div>
 
   <div class="footer-note">Positivação aqui conta clientes distintos que compraram o item no período, excluindo quem teve devolução — mesmo critério do Condor Geral.</div>
+    </div>
+  </div>
 </div>
 
 <script src="data.js"></script>
@@ -41,7 +35,12 @@
 <script>
 (function () {
   var data = getData();
-  document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
+  document.getElementById("sidebarSlot").outerHTML = sidebarHTML("categorias", { exportFn: "exportCategoriasXls" });
+  document.getElementById("topbarSlot").outerHTML = topbarHTML(
+    "Categorias Performance",
+    "Higiene · Limpeza · Beleza — venda faturada e positivação, sem meta oficial (apenas acompanhamento)",
+    data.atualizadoEm
+  );
   var cat = data.categorias;
 
   var scoreboardRows = cat.lista.map(function (c) {
@@ -56,22 +55,21 @@
     '<div class="scoreboard-venda">' + fmtBRLCentavos(cat.totalGeral.faturamento) + '</div>' +
     '<div class="scoreboard-posit">' + fmtInt(cat.totalGeral.positivacao) + '</div>' +
   '</div>';
-  document.getElementById("resumoTotalCard").innerHTML =
+  document.getElementById("scoreboardCard").innerHTML =
     '<div class="scoreboard">' +
-      '<div class="scoreboard-head"><div class="scoreboard-title">Vendas Condor</div><div class="scoreboard-sub">Categorias Performance — acompanhamento do período</div></div>' +
-      '<div class="scoreboard-cols"><span></span><span>Venda</span><span>Positivação</span></div>' +
-      scoreboardRows +
+      '<div class="scoreboard-head"><div class="scoreboard-title">Categorias Performance</div><div class="scoreboard-sub">Acompanhamento do período</div></div>' +
+      '<div class="scoreboard-body">' +
+        '<div class="scoreboard-cols"><span></span><span>Venda</span><span>Positivação</span></div>' +
+        scoreboardRows +
+      '</div>' +
     '</div>';
 
-  document.getElementById("resumoPorSupervisor").innerHTML = '<div class="grid3">' + cat.porSupervisor.map(function (s) {
-    return '<div class="card sup-card" style="--sup-accent:' + supAccent(s.supervisorId) + '">' +
-      '<div class="sup-head"><div class="sup-name"><span class="dot"></span>' + s.nome + '</div><span class="num" style="font-weight:800">' + fmtBRL(s.faturamento) + '</span></div>' +
-      '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">Positivação: <b>' + fmtInt(s.positivacao) + '</b> clientes · Caixas: <b>' + fmtNum(s.caixasVenda,1) + '</b></div>' +
-    '</div>';
-  }).join("") + '</div>';
+  document.getElementById("stackBarCard").innerHTML = stackBarHTML(cat.lista.map(function (c) {
+    return { label: c.nome, value: c.totalGeral.faturamento, valueText: fmtBRL(c.totalGeral.faturamento), colorVar: catAccent(c.id) };
+  }));
 
   document.getElementById("tabs").innerHTML = cat.lista.map(function (c, i) {
-    return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" data-tab="panel-' + c.id + '">' + c.nome + '</button>';
+    return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" data-tab="panel-' + c.id + '" style="--tab-accent:' + catAccent(c.id) + '">' + c.nome + '</button>';
   }).join("");
 
   document.getElementById("tabpanels").innerHTML = cat.lista.map(function (c, i) {
@@ -108,8 +106,35 @@
     '</div>';
   }).join("");
 
+  var comFaturamento = cat.porSupervisor.slice().filter(function (s) { return s.faturamento > 0 || s.aFaturar > 0; }).sort(function (a, b) { return b.faturamento - a.faturamento; });
+  var maxFat = comFaturamento.reduce(function (m, x) { return Math.max(m, x.faturamento); }, 0) || 1;
+  document.getElementById("rankCard").innerHTML = rankChartHTML(comFaturamento.map(function (s) {
+    return {
+      nome: s.nome,
+      accentVar: supAccent(s.supervisorId),
+      pct: s.faturamento / maxFat * 100,
+      valorTexto: fmtBRL(s.faturamento),
+      valorSub: fmtInt(s.positivacao) + " clientes"
+    };
+  }));
+
   wireTabs(document);
 })();
+
+function exportCategoriasXls() {
+  var data = getData();
+  var cat = data.categorias;
+  var headers = ["Categoria", "Supervisor", "Faturado", "A Faturar", "Faturamento", "Caixas Vendidas", "Positivação Faturado", "Positivação A Faturar", "Positivação"];
+  var rows = [];
+  cat.lista.forEach(function (c) {
+    c.porSupervisor.forEach(function (s) {
+      rows.push([c.nome, s.nome, fmtBRLCentavos(s.faturado), fmtBRLCentavos(s.aFaturar), fmtBRLCentavos(s.faturamento), fmtNum(s.caixasVenda, 2), s.positivacaoFaturado, s.positivacaoAFaturar, s.positivacao]);
+    });
+    rows.push([c.nome, "TOTAL CATEGORIA", fmtBRLCentavos(c.totalGeral.faturado), fmtBRLCentavos(c.totalGeral.aFaturar), fmtBRLCentavos(c.totalGeral.faturamento), fmtNum(c.totalGeral.caixasVenda, 2), c.totalGeral.positivacaoFaturado, c.totalGeral.positivacaoAFaturar, c.totalGeral.positivacao]);
+  });
+  rows.push(["TOTAL GERAL", "", fmtBRLCentavos(cat.totalGeral.faturado), fmtBRLCentavos(cat.totalGeral.aFaturar), fmtBRLCentavos(cat.totalGeral.faturamento), fmtNum(cat.totalGeral.caixasVenda, 2), cat.totalGeral.positivacaoFaturado, cat.totalGeral.positivacaoAFaturar, cat.totalGeral.positivacao]);
+  downloadHtmlAsXls("Condor Categorias", headers, rows, "Condor Categorias Performance.xls");
+}
 </script>
 </body>
 </html>

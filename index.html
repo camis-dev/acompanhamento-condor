@@ -7,23 +7,14 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-top">
-      <div class="brandrow">
-        <div class="logo-slot">Triunfante</div>
-        <span class="brand-x">×</span>
-        <div class="logo-slot">Condor</div>
-      </div>
-      <div class="hero-meta">Atualizado em <span id="atualizadoEm">—</span></div>
+<div class="app">
+  <div id="sidebarSlot"></div>
+  <div class="main">
+    <div class="content">
+      <div id="topbarSlot"></div>
+      <div class="menu-grid" id="menuGrid"></div>
     </div>
-    <h1>Acompanhamento Condor</h1>
-    <div class="sub">O que você quer ver?</div>
   </div>
-</div>
-
-<div class="wrap">
-  <div class="menu-grid" id="menuGrid" style="margin-top:26px"></div>
 </div>
 
 <script src="data.js"></script>
@@ -31,47 +22,53 @@
 <script>
 (function () {
   var data = getData();
-  document.getElementById("atualizadoEm").textContent = new Date(data.atualizadoEm).toLocaleString("pt-BR");
+
+  document.getElementById("sidebarSlot").outerHTML = sidebarHTML("");
+  document.getElementById("topbarSlot").outerHTML = topbarHTML("Acompanhamento Condor", "O que você quer ver?", data.atualizadoEm);
 
   var g = data.geral.totalGeral;
   var cats = data.categorias.totalGeral;
-  var cdm = data.casaDeMae.totalGeral;
 
   var itens = [
     {
-      href: "visao-geral.html", accent: "var(--condor-2)", tag: "Fornecedor 35116 · todos os produtos",
+      href: "visao-geral.html", accent: "var(--condor-2)", icon: iconGeral(), tag: "Fornecedor 35116 · todos os produtos",
       titulo: "Visão Geral", desc: "Faturado, a faturar, caixas vendidas e positivação por supervisor e vendedor, com metas e percentuais.",
       stats: [
         { v: fmtBRL(g.faturamento), k: "Faturamento" },
         { v: fmtInt(g.positivacao), k: "Clientes positivados" }
-      ]
+      ],
+      meter: g.metaFaturamento ? meterRow("Meta faturamento", g.pctMetaFaturamento) : ""
     },
     {
-      href: "categorias.html", accent: "var(--sup-24)", tag: "Higiene · Limpeza · Beleza",
+      href: "categorias.html", accent: "var(--sup-24)", icon: iconCategorias(), tag: "Higiene · Limpeza · Beleza",
       titulo: "Categorias Performance", desc: "Venda faturada e positivação das 3 categorias foco, por supervisor — sem meta oficial, só acompanhamento.",
       stats: [
         { v: fmtBRL(cats.faturamento), k: "Faturamento" },
         { v: fmtInt(cats.positivacao), k: "Clientes positivados" }
-      ]
+      ],
+      meter: ""
     },
     {
-      href: "casa-de-mae.html", accent: "var(--sup-27)", tag: "Rede Italo · 6 CNPJs",
-      titulo: "Casa de Mãe", desc: "Linha Casa de Mãe vendida para os CNPJs da Rede Italo, com exportação no padrão exato da planilha.",
+      href: "estoque.html", accent: "var(--critical)", icon: iconBox(), tag: "Relatório de estoque + simulação de risco",
+      titulo: "Estoque", desc: "Estoque por SKU (valor pela última entrada de compra) e simulação de quanto do \"A Faturar\" está em risco por falta de estoque.",
       stats: [
-        { v: cdm.clientesAtivos + "/" + cdm.clientesRede, k: "Lojas ativas" },
-        { v: fmtBRL(cdm.faturamento), k: "Faturamento" }
-      ]
+        { v: fmtBRL(data.estoque.total.valor), k: "Valor em estoque" },
+        { v: fmtInt(data.estoque.produtos.length), k: "SKUs" }
+      ],
+      meter: ""
     }
   ];
 
   document.getElementById("menuGrid").innerHTML = itens.map(function (it) {
     return '<a class="menu-card" href="' + it.href + '" style="--menu-accent:' + it.accent + '">' +
+      '<div class="menu-icon">' + it.icon + '</div>' +
       '<div class="menu-tag">' + it.tag + '</div>' +
       '<h2>' + it.titulo + '</h2>' +
       '<p>' + it.desc + '</p>' +
       '<div class="menu-stats">' + it.stats.map(function (s) {
         return '<div class="stat-inline"><div class="v num">' + s.v + '</div><div class="k">' + s.k + '</div></div>';
       }).join("") + '</div>' +
+      (it.meter ? '<div class="menu-meter">' + it.meter + '</div>' : '') +
       '<div class="menu-arrow">→</div>' +
     '</a>';
   }).join("");

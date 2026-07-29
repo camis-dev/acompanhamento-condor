@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estoque — Acompanhamento Condor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarSlot"></div>
+  <div class="main">
+    <div class="content">
+      <div id="topbarSlot"></div>
+
+      <div class="tabs" id="subTabs">
+        <button class="tab-btn active" data-tab="panel-simulacao" style="--tab-accent:var(--critical)">Simulação de Estoque</button>
+        <button class="tab-btn" data-tab="panel-bruto" style="--tab-accent:var(--purple)">Relatório de Estoque</button>
+      </div>
+
+      <div class="tabpanel active" id="panel-simulacao">
+        <div class="stat-grid" id="simStatGrid"></div>
+
+        <div class="section-title">A Faturar por supervisor <span class="tag">original × simulado</span></div>
+        <div class="card" id="simSupCard"></div>
+
+        <div class="section-title">Produtos com estoque insuficiente para o pedido pendente</div>
+        <div class="card" id="simProdCard"></div>
+
+        <div class="footer-note">
+          <b>Como calculamos:</b> para cada produto com pedido pendente ("A Faturar"), comparamos as caixas pendentes contra o estoque disponível (relatório de estoque, fotografia do momento em que foi extraído). Quando o pedido pendente é maior que o estoque, a fração do valor que excede o estoque vira "risco" — não é um corte binário em estoque zerado, é proporcional à quantidade faltante. Produto sem registro no relatório de estoque fica de fora do cálculo (ausência não é o mesmo que "sabemos que não tem estoque"). Detalhe por SKU na aba Relatório de Estoque.
+        </div>
+      </div>
+
+      <div class="tabpanel" id="panel-bruto">
+        <div class="stat-grid" id="brutoStatGrid"></div>
+
+        <div class="section-title">Produtos em estoque</div>
+        <div class="card">
+          <div class="search-row">
+            <input class="search-box" id="busca" type="text" placeholder="Buscar por descrição ou código...">
+            <div class="search-count" id="contador"></div>
+          </div>
+          <div id="tabelaEstoque"></div>
+        </div>
+
+        <div class="footer-note">
+          Valor em estoque de cada produto = Qt.Estoque (unidades) × Vl.Ult.Ent.Unit. (valor unitário da última entrada de compra). Lista ordenada por valor em estoque (maior para o menor). É uma fotografia do momento em que "Estoque - Condor.xls" foi extraído — atualize o relatório e rode a geração de dados de novo para refletir entradas/saídas recentes.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+<script>
+(function () {
+  var data = getData();
+
+  document.getElementById("sidebarSlot").outerHTML = sidebarHTML("estoque", { exportFn: "exportarEstoqueXlsWrapper" });
+  document.getElementById("topbarSlot").outerHTML = topbarHTML(
+    "Estoque · Condor",
+    "Relatório de estoque por SKU e simulação de risco no A Faturar por falta de estoque",
+    data.atualizadoEm
+  );
+
+  var sim = data.geral.simulacaoEstoque;
+  var tg = sim.totalGeral;
+  var pctRisco = tg.aFaturarOriginal > 0 ? (100 * tg.valorRisco / tg.aFaturarOriginal) : 0;
+
+  document.getElementById("simStatGrid").innerHTML = [
+    { label: "A Faturar (original)", value: fmtBRL(tg.aFaturarOriginal), accent: "var(--warning)", icon: iconClock() },
+    { label: "Em risco", value: fmtBRL(tg.valorRisco), vsMeta: fmtPct(pctRisco) + " do A Faturar", accent: "var(--critical)", icon: iconTarget() },
+    { label: "A Faturar (simulado)", value: fmtBRL(tg.aFaturarSimulado), accent: "var(--condor-3)", icon: iconClock() },
+    { label: "Faturamento simulado", value: fmtBRL(tg.faturamentoSimulado), vsMeta: "Faturado + A Faturar simulado", accent: "var(--good)", icon: iconTrendUp() }
+  ].map(statTileHTML).join("");
+
+  document.getElementById("simSupCard").innerHTML = sim.porSupervisor.filter(function (s) { return s.aFaturarOriginal > 0; }).map(function (s) {
+    var pct = s.aFaturarOriginal > 0 ? Math.round(1000 * s.aFaturarSimulado / s.aFaturarOriginal) / 10 : 100;
+    return '<div style="padding:10px 0;border-top:1px solid var(--line)">' +
+      '<div class="sup-name" style="margin-bottom:6px"><span class="dot" style="background:' + supAccent(s.supervisorId) + '"></span>' + s.nome + '</div>' +
+      meterRow("A Faturar simulado", pct) +
+      '<div style="font-size:11.5px;color:var(--ink-muted);margin-top:2px">Original ' + fmtBRLCentavos(s.aFaturarOriginal) + ' · Risco ' + fmtBRLCentavos(s.valorRisco) + ' · Simulado ' + fmtBRLCentavos(s.aFaturarSimulado) + '</div>' +
+    '</div>';
+  }).join("") || '<div class="empty-note">Nenhum supervisor com A Faturar pendente no momento.</div>';
+
+  document.getElementById("simProdCard").innerHTML = sim.produtosRisco.length
+    ? '<div class="datatable-wrap"><table class="datatable"><tr><th>Produto</th><th>Pedido</th><th>Estoque</th><th>Falta</th><th>Valor pedido</th><th>Valor em risco</th></tr>' + sim.produtosRisco.map(produtoRiscoRowHTML).join("") + '</table></div>'
+    : '<div class="empty-note">Nenhum produto com pedido pendente acima do estoque disponível no momento.</div>';
+
+  var est = data.estoque;
+  document.getElementById("brutoStatGrid").innerHTML = [
+    { label: "Valor em estoque", value: fmtBRL(est.total.valor), accent: "var(--condor-3)", icon: iconMoney() },
+    { label: "Caixas em estoque", value: fmtNum(est.total.caixas, 0), accent: "var(--purple)", icon: iconBox() },
+    { label: "Unidades em estoque", value: fmtInt(est.total.unidades), accent: "var(--sup-100)", icon: iconBox() },
+    { label: "SKUs", value: fmtInt(est.produtos.length), accent: "var(--good)", icon: iconCategorias() }
+  ].map(statTileHTML).join("");
+
+  var container = document.getElementById("tabelaEstoque");
+  var contador = document.getElementById("contador");
+  renderEstoqueTabela(container, est.produtos);
+  contador.textContent = est.produtos.length + " de " + est.produtos.length + " produtos";
+  ativarBuscaEstoque(document.getElementById("busca"), container, est.produtos, contador);
+
+  wireTabs(document);
+})();
+
+function exportarEstoqueXlsWrapper() {
+  exportarEstoqueXls(getData().estoque.produtos);
+}
+</script>
+</body>
+</html>
