@@ -12,12 +12,14 @@
   <div class="main">
     <div class="content">
       <div id="topbarSlot"></div>
+      <div id="mesPickerSlot"></div>
       <div class="menu-grid" id="menuGrid"></div>
     </div>
   </div>
 </div>
 
-<script src="data.js"></script>
+<script src="meses.js"></script>
+<script src="mes-loader.js"></script>
 <script src="script.js"></script>
 <script>
 (function () {
@@ -25,6 +27,8 @@
 
   document.getElementById("sidebarSlot").outerHTML = sidebarHTML("");
   document.getElementById("topbarSlot").outerHTML = topbarHTML("Acompanhamento Condor", "O que você quer ver?", data.atualizadoEm);
+  document.getElementById("mesPickerSlot").outerHTML = mesPickerHTML(window.CONDOR_MESES, window.CONDOR_MES_ATUAL);
+  wireMesPicker(document);
 
   var g = data.geral.totalGeral;
   var cats = data.categorias.totalGeral;

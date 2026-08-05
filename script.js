@@ -89,14 +89,52 @@ function sidebarHTML(active, opts) {
   );
 }
 
+function mesBadgeHTML() {
+  // so mostra o badge (com link pra trocar) se houver mais de 1 mes no
+  // manifesto -- com 1 mes so, nao ha o que trocar.
+  var meses = window.CONDOR_MESES || [];
+  var atual = window.CONDOR_MES_ATUAL;
+  if (!atual || meses.length < 2) return "";
+  var info = meses.filter(function (m) { return m.id === atual; })[0];
+  var label = info ? info.label : atual;
+  return '<a class="datepill mespill" href="index.html" title="Trocar mês">' + iconCalendar() + label + '</a>';
+}
+
 function topbarHTML(title, sub, atualizadoEmISO) {
   var dt = atualizadoEmISO ? new Date(atualizadoEmISO).toLocaleString("pt-BR") : "—";
   return (
     '<div class="topbar">' +
       '<div><h1>' + title + '</h1>' + (sub ? '<div class="topbar-sub">' + sub + '</div>' : '') + '</div>' +
-      '<div class="datepill">' + iconCalendar() + 'Atualizado em ' + dt + '</div>' +
+      '<div class="topbar-pills">' + mesBadgeHTML() + '<div class="datepill">' + iconCalendar() + 'Atualizado em ' + dt + '</div></div>' +
     '</div>'
   );
+}
+
+// ---------------------------------------------------------------------------
+// Seletor de mes -- pilulas clicaveis na pagina inicial. Trocar de mes salva a
+// escolha (localStorage) e recarrega a pagina pro mes-loader.js pegar o
+// data-<mes>.js certo.
+// ---------------------------------------------------------------------------
+function mesPickerHTML(meses, mesAtual) {
+  if (!meses || meses.length < 2) return "";
+  var pills = meses.map(function (m) {
+    return '<button type="button" class="mes-btn' + (m.id === mesAtual ? ' active' : '') + '" data-mes="' + m.id + '">' + m.label + '</button>';
+  }).join("");
+  return (
+    '<div class="mes-picker">' +
+      '<span class="mes-picker-label">Ver números de:</span>' +
+      '<div class="mes-picker-pills">' + pills + '</div>' +
+    '</div>'
+  );
+}
+function wireMesPicker(root) {
+  root.querySelectorAll(".mes-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var mes = btn.getAttribute("data-mes");
+      try { localStorage.setItem("condorMes", mes); } catch (e) {}
+      window.location.href = "index.html?mes=" + encodeURIComponent(mes);
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------

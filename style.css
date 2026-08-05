@@ -163,12 +163,29 @@ svg.icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.14
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
 .topbar h1 { font-size: 25px; margin: 0; font-weight: 800; letter-spacing: -0.2px; }
 .topbar-sub { font-size: 13px; color: var(--ink-soft); margin-top: 5px; max-width: 640px; line-height: 1.4; }
+.topbar-pills { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .datepill {
   display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--ink-soft);
   background: var(--panel); border: 1px solid var(--line); border-radius: 30px; padding: 8px 14px;
   box-shadow: var(--shadow-sm); white-space: nowrap;
 }
 .datepill svg { width: 15px; height: 15px; flex-shrink: 0; }
+.mespill { color: var(--condor-2); border-color: var(--condor-2); text-decoration: none; cursor: pointer; }
+.mespill:hover { background: var(--condor-soft-bg); }
+
+/* ---- Seletor de mes (pagina inicial) ---- */
+.mes-picker {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -6px 0 20px;
+}
+.mes-picker-label { font-size: 12px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.mes-picker-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.mes-btn {
+  font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 30px; padding: 7px 16px;
+  box-shadow: var(--shadow-sm); transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.mes-btn:hover { border-color: var(--condor-2); color: var(--condor-2); }
+.mes-btn.active { background: var(--condor-grad); color: #fff; border-color: transparent; }
 
 @media (max-width: 880px) {
   .app { flex-direction: column; }
