@@ -173,19 +173,39 @@ svg.icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.14
 .mespill { color: var(--condor-2); border-color: var(--condor-2); text-decoration: none; cursor: pointer; }
 .mespill:hover { background: var(--condor-soft-bg); }
 
-/* ---- Seletor de mes (pagina inicial) ---- */
-.mes-picker {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -6px 0 20px;
+/* ---- Portao de mes (index.html -- tela antes de qualquer dado) ---- */
+.mesgate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--condor-grad); padding: 24px;
 }
-.mes-picker-label { font-size: 12px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.3px; }
-.mes-picker-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-.mes-btn {
-  font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 30px; padding: 7px 16px;
-  box-shadow: var(--shadow-sm); transition: background 0.15s, color 0.15s, border-color 0.15s;
+.mesgate-card {
+  background: var(--panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+  padding: 44px 40px; max-width: 560px; width: 100%; text-align: center;
 }
-.mes-btn:hover { border-color: var(--condor-2); color: var(--condor-2); }
-.mes-btn.active { background: var(--condor-grad); color: #fff; border-color: transparent; }
+.mesgate-brand {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 26px;
+  font-weight: 700; font-size: 12.5px; color: var(--ink-muted);
+}
+.mesgate-brand .side-brand-badge {
+  background: var(--condor-grad); color: #fff; border-radius: 6px; padding: 3px 8px; font-size: 11px;
+}
+.mesgate-card h1 { font-size: 24px; margin: 0 0 8px; font-weight: 800; letter-spacing: -0.2px; }
+.mesgate-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 26px; }
+.mesgate-grid { display: flex; flex-direction: column; gap: 12px; }
+.mesgate-btn {
+  display: flex; align-items: center; gap: 12px; font: inherit; font-size: 15px; font-weight: 700;
+  color: var(--ink); cursor: pointer; text-align: left; width: 100%;
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.mesgate-btn:hover { border-color: var(--condor-2); background: var(--condor-soft-bg); transform: translateY(-1px); }
+.mesgate-btn-icon { display: flex; color: var(--condor-2); flex-shrink: 0; }
+.mesgate-btn-icon svg { width: 19px; height: 19px; }
+.mesgate-btn-label { flex: 1; }
+.mesgate-btn-tag {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #fff;
+  background: var(--condor-grad); border-radius: 20px; padding: 4px 9px; flex-shrink: 0;
+}
 
 @media (max-width: 880px) {
   .app { flex-direction: column; }

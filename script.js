@@ -80,7 +80,7 @@ function sidebarHTML(active, opts) {
   }
   return (
     '<div class="sidebar">' +
-      '<a class="side-brand" href="index.html">' +
+      '<a class="side-brand" href="menu.html">' +
         '<span class="side-brand-badge">Triunfante</span><span class="side-brand-x">×</span><span class="side-brand-name">Condor</span>' +
       '</a>' +
       '<nav class="side-nav">' + nav + '</nav>' +
@@ -109,28 +109,30 @@ function topbarHTML(title, sub, atualizadoEmISO) {
 }
 
 // ---------------------------------------------------------------------------
-// Seletor de mes -- pilulas clicaveis na pagina inicial. Trocar de mes salva a
-// escolha (localStorage) e recarrega a pagina pro mes-loader.js pegar o
-// data-<mes>.js certo.
+// Portao de mes -- tela inicial (index.html), antes de qualquer dado/menu.
+// Um card grande por mes; escolher salva (localStorage) e manda pro menu.html
+// (dashboard de verdade) ja com esse mes selecionado. index.html NAO carrega
+// data-<mes>.js nem mostra numero nenhum -- so o manifesto de meses.
 // ---------------------------------------------------------------------------
-function mesPickerHTML(meses, mesAtual) {
-  if (!meses || meses.length < 1) return "";
-  var pills = meses.map(function (m) {
-    return '<button type="button" class="mes-btn' + (m.id === mesAtual ? ' active' : '') + '" data-mes="' + m.id + '">' + m.label + '</button>';
+function mesGateCardsHTML(meses) {
+  if (!meses || !meses.length) return '<div class="empty-note">Nenhum mês disponível ainda.</div>';
+  var ultimoId = meses[meses.length - 1].id;
+  return meses.map(function (m) {
+    return (
+      '<button type="button" class="mesgate-btn" data-mes="' + m.id + '">' +
+        '<span class="mesgate-btn-icon">' + iconCalendar() + '</span>' +
+        '<span class="mesgate-btn-label">' + m.label + '</span>' +
+        (m.id === ultimoId ? '<span class="mesgate-btn-tag">Mais recente</span>' : '') +
+      '</button>'
+    );
   }).join("");
-  return (
-    '<div class="mes-picker">' +
-      '<span class="mes-picker-label">Ver números de:</span>' +
-      '<div class="mes-picker-pills">' + pills + '</div>' +
-    '</div>'
-  );
 }
-function wireMesPicker(root) {
-  root.querySelectorAll(".mes-btn").forEach(function (btn) {
+function wireMesGate(root) {
+  root.querySelectorAll(".mesgate-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var mes = btn.getAttribute("data-mes");
       try { localStorage.setItem("condorMes", mes); } catch (e) {}
-      window.location.href = "index.html?mes=" + encodeURIComponent(mes);
+      window.location.href = "menu.html?mes=" + encodeURIComponent(mes);
     });
   });
 }

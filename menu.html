@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acompanhamento Condor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarSlot"></div>
+  <div class="main">
+    <div class="content">
+      <div id="topbarSlot"></div>
+      <div class="menu-grid" id="menuGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script src="meses.js"></script>
+<script src="mes-loader.js"></script>
+<script src="script.js"></script>
+<script>
+(function () {
+  var data = getData();
+
+  document.getElementById("sidebarSlot").outerHTML = sidebarHTML("");
+  document.getElementById("topbarSlot").outerHTML = topbarHTML("Acompanhamento Condor", "O que você quer ver?", data.atualizadoEm);
+
+  var g = data.geral.totalGeral;
+  var cats = data.categorias.totalGeral;
+
+  var itens = [
+    {
+      href: "visao-geral.html", accent: "var(--condor-2)", icon: iconGeral(), tag: "Fornecedor 35116 · todos os produtos",
+      titulo: "Visão Geral", desc: "Faturado, a faturar, caixas vendidas e positivação por supervisor e vendedor, com metas e percentuais.",
+      stats: [
+        { v: fmtBRL(g.faturamento), k: "Faturamento" },
+        { v: fmtInt(g.positivacao), k: "Clientes positivados" }
+      ],
+      meter: g.metaFaturamento ? meterRow("Meta faturamento", g.pctMetaFaturamento) : ""
+    },
+    {
+      href: "categorias.html", accent: "var(--sup-24)", icon: iconCategorias(), tag: "Higiene · Limpeza · Beleza",
+      titulo: "Categorias Performance", desc: "Venda faturada e positivação das 3 categorias foco, por supervisor — sem meta oficial, só acompanhamento.",
+      stats: [
+        { v: fmtBRL(cats.faturamento), k: "Faturamento" },
+        { v: fmtInt(cats.positivacao), k: "Clientes positivados" }
+      ],
+      meter: ""
+    },
+    {
+      href: "estoque.html", accent: "var(--critical)", icon: iconBox(), tag: "Relatório de estoque + simulação de risco",
+      titulo: "Estoque", desc: "Estoque por SKU (valor pela última entrada de compra) e simulação de quanto do \"A Faturar\" está em risco por falta de estoque.",
+      stats: [
+        { v: fmtBRL(data.estoque.total.valor), k: "Valor em estoque" },
+        { v: fmtInt(data.estoque.produtos.length), k: "SKUs" }
+      ],
+      meter: ""
+    }
+  ];
+
+  document.getElementById("menuGrid").innerHTML = itens.map(function (it) {
+    return '<a class="menu-card" href="' + it.href + '" style="--menu-accent:' + it.accent + '">' +
+      '<div class="menu-icon">' + it.icon + '</div>' +
+      '<div class="menu-tag">' + it.tag + '</div>' +
+      '<h2>' + it.titulo + '</h2>' +
+      '<p>' + it.desc + '</p>' +
+      '<div class="menu-stats">' + it.stats.map(function (s) {
+        return '<div class="stat-inline"><div class="v num">' + s.v + '</div><div class="k">' + s.k + '</div></div>';
+      }).join("") + '</div>' +
+      (it.meter ? '<div class="menu-meter">' + it.meter + '</div>' : '') +
+      '<div class="menu-arrow">→</div>' +
+    '</a>';
+  }).join("");
+})();
+</script>
+</body>
+</html>
