@@ -90,11 +90,9 @@ function sidebarHTML(active, opts) {
 }
 
 function mesBadgeHTML() {
-  // so mostra o badge (com link pra trocar) se houver mais de 1 mes no
-  // manifesto -- com 1 mes so, nao ha o que trocar.
   var meses = window.CONDOR_MESES || [];
   var atual = window.CONDOR_MES_ATUAL;
-  if (!atual || meses.length < 2) return "";
+  if (!atual || meses.length < 1) return "";
   var info = meses.filter(function (m) { return m.id === atual; })[0];
   var label = info ? info.label : atual;
   return '<a class="datepill mespill" href="index.html" title="Trocar mês">' + iconCalendar() + label + '</a>';
@@ -116,7 +114,7 @@ function topbarHTML(title, sub, atualizadoEmISO) {
 // data-<mes>.js certo.
 // ---------------------------------------------------------------------------
 function mesPickerHTML(meses, mesAtual) {
-  if (!meses || meses.length < 2) return "";
+  if (!meses || meses.length < 1) return "";
   var pills = meses.map(function (m) {
     return '<button type="button" class="mes-btn' + (m.id === mesAtual ? ' active' : '') + '" data-mes="' + m.id + '">' + m.label + '</button>';
   }).join("");
